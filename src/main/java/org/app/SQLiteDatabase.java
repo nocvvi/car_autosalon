@@ -30,7 +30,8 @@ public class SQLiteDatabase {
                     "brand TEXT, " +
                     "model TEXT, " +
                     "type TEXT, " +
-                    "customer_name TEXT" +
+                    "customer_name TEXT, " +
+                    "FOREIGN KEY (customer_name) REFERENCES customers(full_name)" +
                     ")";
             connection.createStatement().executeUpdate(createCarsTable);
 
@@ -41,6 +42,14 @@ public class SQLiteDatabase {
                     ")";
             connection.createStatement().executeUpdate(createCustomersTable);
 
+            String createSoldCarsTable = "CREATE TABLE IF NOT EXISTS sold_cars (" +
+                    "car_id INTEGER, " +
+                    "customer_name TEXT, " +
+                    "FOREIGN KEY (car_id) REFERENCES cars(car_id), " +
+                    "FOREIGN KEY (customer_name) REFERENCES customers(full_name)" +
+                    ")";
+            connection.createStatement().executeUpdate(createSoldCarsTable);
+
             logger.info("Database tables created successfully");
         } catch (SQLException e) {
             logger.error("Failed to create database tables", e);
@@ -50,6 +59,19 @@ public class SQLiteDatabase {
     public Connection getConnection() {
         return connection;
     }
-    public void setConnection(Connection connection){this.connection = connection;}
 
+    public void setConnection(Connection connection) {
+        this.connection = connection;
+    }
+
+    public void closeConnection() {
+        try {
+            if (connection != null && !connection.isClosed()) {
+                connection.close();
+                logger.info("Database connection closed.");
+            }
+        } catch (SQLException e) {
+            logger.error("Failed to close the database connection", e);
+        }
+    }
 }

@@ -1,10 +1,14 @@
 package org.app;
 
 import javax.swing.*;
+import java.awt.*;
 import java.util.List;
 
 public class CarDealerGUI {
     private final AutoSalon autoSalon;
+
+    private final JPanel cards;
+    private final CardLayout cardLayout;
 
     public CarDealerGUI() {
         SQLiteDatabase db = new SQLiteDatabase();
@@ -14,8 +18,11 @@ public class CarDealerGUI {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(800, 500);
 
-        JPanel panel = new JPanel();
-        frame.add(panel);
+        cardLayout = new CardLayout();
+        cards = new JPanel(cardLayout);
+
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
 
         JButton addCarButton = new JButton("Добавить автомобиль");
         JButton editCarButton = new JButton("Редактировать информацию об автомобиле");
@@ -24,41 +31,53 @@ public class CarDealerGUI {
         JButton showCustomersButton = new JButton("Показать покупателей");
         JButton showCustomerInfoButton = new JButton("Показать информацию о покупателе");
         JButton sellCarByIdButton = new JButton("Продать автомобиль по ID");
+        JButton showSoldCarsButton = new JButton("Показать проданные автомобили и покупателей");
 
-        panel.add(addCarButton);
-        panel.add(editCarButton);
-        panel.add(editCustomerButton);
-        panel.add(showCarsButton);
-        panel.add(showCustomersButton);
-        panel.add(showCustomerInfoButton);
-        panel.add(sellCarByIdButton);
+        mainPanel.add(addCarButton);
+        mainPanel.add(editCarButton);
+        mainPanel.add(editCustomerButton);
+        mainPanel.add(showCarsButton);
+        mainPanel.add(showCustomersButton);
+        mainPanel.add(showCustomerInfoButton);
+        mainPanel.add(sellCarByIdButton);
+        mainPanel.add(showSoldCarsButton);
 
-        addCarButton.addActionListener(e -> openAddCarDialog());
-        editCarButton.addActionListener(e -> openEditCarDialog());
-        editCustomerButton.addActionListener(e -> openEditCustomerDialog());
-        showCarsButton.addActionListener(e -> showCars());
-        showCustomersButton.addActionListener(e -> showCustomers());
-        showCustomerInfoButton.addActionListener(e -> openCustomerInfoDialog());
-        sellCarByIdButton.addActionListener(e -> openSellCarDialog());
+        cards.add(mainPanel, "main");
 
+        addCarButton.addActionListener(e -> openAddCarPanel());
+        editCarButton.addActionListener(e -> openEditCarPanel());
+        editCustomerButton.addActionListener(e -> openEditCustomerPanel());
+        showCarsButton.addActionListener(e -> showCarsPanel());
+        showCustomersButton.addActionListener(e -> showCustomersPanel());
+        showCustomerInfoButton.addActionListener(e -> openCustomerInfoPanel());
+        sellCarByIdButton.addActionListener(e -> openSellCarPanel());
+        showSoldCarsButton.addActionListener(e -> showSoldCarsPanel());
+
+        frame.getContentPane().add(cards);
         frame.setVisible(true);
+
+        frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        frame.addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+                closeApplication();
+            }
+        });
     }
 
-    private void openAddCarDialog() {
-        JDialog dialog = new JDialog();
-        dialog.setTitle("Добавить автомобиль");
-        dialog.setSize(600, 600);
-        dialog.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+    private JButton createBackButton() {
+        JButton backButton = new JButton("Назад");
+        backButton.addActionListener(e -> cardLayout.show(cards, "main"));
+        return backButton;
+    }
 
-        JPanel addCarPanel = new JPanel();
-        dialog.add(addCarPanel);
-
-        JTextField carIdField = new JTextField(10);
-        JTextField brandField = new JTextField(10);
-        JTextField modelField = new JTextField(10);
-        JTextField typeField = new JTextField(10);
-        JTextField customerNameField = new JTextField(10);
+    private void openAddCarPanel() {
+        JPanel addCarPanel = new JPanel(new GridLayout(2, 2));
+        JTextField carIdField = new JTextField();
+        JTextField brandField = new JTextField();
+        JTextField modelField = new JTextField();
+        JTextField typeField = new JTextField();
         JButton addButton = new JButton("Добавить");
+        JButton backButton = createBackButton();
 
         addCarPanel.add(new JLabel("Car ID:"));
         addCarPanel.add(carIdField);
@@ -69,6 +88,7 @@ public class CarDealerGUI {
         addCarPanel.add(new JLabel("Тип:"));
         addCarPanel.add(typeField);
         addCarPanel.add(addButton);
+        addCarPanel.add(backButton);
 
         addButton.addActionListener(e -> {
             try {
@@ -76,32 +96,27 @@ public class CarDealerGUI {
                 String brand = brandField.getText();
                 String model = modelField.getText();
                 String type = typeField.getText();
-                //String customerName = customerNameField.getText();
                 Car car = new Car(carId, brand, model, type);
                 autoSalon.addCar(car);
-                dialog.dispose();
+                JOptionPane.showMessageDialog(null, "Автомобиль успешно добавлен", "Успех", JOptionPane.INFORMATION_MESSAGE);
+                cardLayout.show(cards, "main");
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(null, "Введите корректные данные для Car ID", "Ошибка", JOptionPane.ERROR_MESSAGE);
             }
         });
 
-        dialog.setVisible(true);
+        cards.add(addCarPanel, "addCar");
+        cardLayout.show(cards, "addCar");
     }
 
-    private void openEditCarDialog() {
-        JDialog dialog = new JDialog();
-        dialog.setTitle("Редактировать информацию об автомобиле");
-        dialog.setSize(600, 600);
-        dialog.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-
-        JPanel editCarPanel = new JPanel();
-        dialog.add(editCarPanel);
-
-        JTextField carIdField = new JTextField(10);
-        JTextField brandField = new JTextField(10);
-        JTextField modelField = new JTextField(10);
-        JTextField typeField = new JTextField(10);
+    private void openEditCarPanel() {
+        JPanel editCarPanel = new JPanel(new GridLayout(4, 2));
+        JTextField carIdField = new JTextField();
+        JTextField brandField = new JTextField();
+        JTextField modelField = new JTextField();
+        JTextField typeField = new JTextField();
         JButton editButton = new JButton("Редактировать");
+        JButton backButton = createBackButton();
 
         editCarPanel.add(new JLabel("Car ID:"));
         editCarPanel.add(carIdField);
@@ -112,6 +127,7 @@ public class CarDealerGUI {
         editCarPanel.add(new JLabel("Тип:"));
         editCarPanel.add(typeField);
         editCarPanel.add(editButton);
+        editCarPanel.add(backButton);
 
         editButton.addActionListener(e -> {
             try {
@@ -120,28 +136,24 @@ public class CarDealerGUI {
                 String model = modelField.getText();
                 String type = typeField.getText();
                 autoSalon.editCarInfo(carId, brand, model, type);
-                dialog.dispose();
+                JOptionPane.showMessageDialog(null, "Информация об автомобиле успешно отредактирована", "Успех", JOptionPane.INFORMATION_MESSAGE);
+                cardLayout.show(cards, "main");
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(null, "Введите корректные данные для Car ID", "Ошибка", JOptionPane.ERROR_MESSAGE);
             }
         });
 
-        dialog.setVisible(true);
+        cards.add(editCarPanel, "editCar");
+        cardLayout.show(cards, "editCar");
     }
 
-    private void openEditCustomerDialog() {
-        JDialog dialog = new JDialog();
-        dialog.setTitle("Редактировать информацию о покупателе");
-        dialog.setSize(600, 600);
-        dialog.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-
-        JPanel editCustomerPanel = new JPanel();
-        dialog.add(editCustomerPanel);
-
-        JTextField nameField = new JTextField(10);
-        JTextField ageField = new JTextField(10);
-        JTextField genderField = new JTextField(10);
+    private void openEditCustomerPanel() {
+        JPanel editCustomerPanel = new JPanel(new GridLayout(2, 2));
+        JTextField nameField = new JTextField();
+        JTextField ageField = new JTextField();
+        JTextField genderField = new JTextField();
         JButton editButton = new JButton("Редактировать");
+        JButton backButton = createBackButton();
 
         editCustomerPanel.add(new JLabel("ФИО:"));
         editCustomerPanel.add(nameField);
@@ -150,6 +162,7 @@ public class CarDealerGUI {
         editCustomerPanel.add(new JLabel("Пол:"));
         editCustomerPanel.add(genderField);
         editCustomerPanel.add(editButton);
+        editCustomerPanel.add(backButton);
 
         editButton.addActionListener(e -> {
             String name = nameField.getText();
@@ -157,33 +170,132 @@ public class CarDealerGUI {
                 int age = Integer.parseInt(ageField.getText());
                 String gender = genderField.getText();
                 autoSalon.editCustomerInfo(name, age, gender);
-                dialog.dispose();
+                JOptionPane.showMessageDialog(null, "Информация о покупателе успешно отредактирована", "Успех", JOptionPane.INFORMATION_MESSAGE);
+                cardLayout.show(cards, "main");
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(null, "Введите корректные данные для возраста", "Ошибка", JOptionPane.ERROR_MESSAGE);
             }
         });
 
-        dialog.setVisible(true);
+        cards.add(editCustomerPanel, "editCustomer");
+        cardLayout.show(cards, "editCustomer");
     }
 
-    private void openSellCarDialog() {
-        JDialog dialog = new JDialog();
-        dialog.setTitle("Продать автомобиль по ID");
-        dialog.setSize(600, 600);
-        dialog.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+    private void showSoldCarsPanel() {
+        JPanel soldCarsPanel = new JPanel(new BorderLayout());
+        JTextArea soldCarsTextArea = new JTextArea();
+        soldCarsTextArea.setEditable(false);
+        JScrollPane scrollPane = new JScrollPane(soldCarsTextArea);
+        JButton backButton = createBackButton();
 
-        JPanel sellCarPanel = new JPanel();
-        dialog.add(sellCarPanel);
+        List<SoldCar> soldCars = autoSalon.getSoldCars();
+        StringBuilder soldCarsText = new StringBuilder();
+        for (SoldCar soldCar : soldCars) {
+            soldCarsText.append(soldCar).append("\n");
+        }
+        soldCarsTextArea.setText(soldCarsText.toString());
 
-        JTextField carIdField = new JTextField(10);
-        JTextField customerNameField = new JTextField(10);
+        soldCarsPanel.add(backButton, BorderLayout.NORTH);
+        soldCarsPanel.add(scrollPane, BorderLayout.CENTER);
+
+        cards.add(soldCarsPanel, "showSoldCars");
+        cardLayout.show(cards, "showSoldCars");
+    }
+
+
+
+
+    private void showCarsPanel() {
+        JPanel carsPanel = new JPanel(new BorderLayout());
+        JTextArea carsTextArea = new JTextArea();
+        carsTextArea.setEditable(false);
+        JScrollPane scrollPane = new JScrollPane(carsTextArea);
+        JButton backButton = createBackButton();
+
+        List<Car> cars = autoSalon.getAllCars();
+        StringBuilder carsText = new StringBuilder();
+        for (Car car : cars) {
+            carsText.append(car).append("\n");
+        }
+        carsTextArea.setText(carsText.toString());
+
+        carsPanel.add(backButton, BorderLayout.NORTH);
+        carsPanel.add(scrollPane, BorderLayout.CENTER);
+
+        cards.add(carsPanel, "showCars");
+        cardLayout.show(cards, "showCars");
+    }
+
+    private void showCustomersPanel() {
+        JPanel customersPanel = new JPanel(new BorderLayout());
+        JTextArea customersTextArea = new JTextArea();
+        customersTextArea.setEditable(false);
+        JScrollPane scrollPane = new JScrollPane(customersTextArea);
+        JButton backButton = createBackButton();
+
+        List<Customer> customers = autoSalon.getAllCustomers();
+        StringBuilder customersText = new StringBuilder();
+        for (Customer customer : customers) {
+            customersText.append(customer.getFormattedInfo()).append("\n");
+        }
+        customersTextArea.setText(customersText.toString());
+
+        customersPanel.add(backButton, BorderLayout.NORTH);
+        customersPanel.add(scrollPane, BorderLayout.CENTER);
+
+        cards.add(customersPanel, "showCustomers");
+        cardLayout.show(cards, "showCustomers");
+    }
+
+    private void openCustomerInfoPanel() {
+        JPanel customerInfoPanel = new JPanel(new BorderLayout());
+        JTextField nameField = new JTextField();
+        JButton showButton = new JButton("Показать информацию");
+        JButton backButton = createBackButton();
+
+        JPanel inputPanel = new JPanel();
+        inputPanel.add(new JLabel("ФИО:"));
+        inputPanel.add(nameField);
+        inputPanel.add(showButton);
+        inputPanel.add(backButton);
+
+        JTextArea customerInfoTextArea = new JTextArea();
+        customerInfoTextArea.setEditable(false);
+        JScrollPane scrollPane = new JScrollPane(customerInfoTextArea);
+
+        showButton.addActionListener(e -> {
+            String name = nameField.getText();
+            List<Car> customerCars = autoSalon.getCustomerCars(name);
+            StringBuilder customerInfoText = new StringBuilder();
+            customerInfoText.append("Автомобили покупателя ").append(name).append(":\n");
+            for (Car car : customerCars) {
+                customerInfoText.append(car).append("\n");
+            }
+            customerInfoTextArea.setText(customerInfoText.toString());
+        });
+
+        backButton.addActionListener(e -> cardLayout.show(cards, "main"));
+
+        customerInfoPanel.add(inputPanel, BorderLayout.NORTH);
+        customerInfoPanel.add(scrollPane, BorderLayout.CENTER);
+
+        cards.add(customerInfoPanel, "customerInfo");
+        cardLayout.show(cards, "customerInfo");
+    }
+
+    private void openSellCarPanel() {
+        JPanel sellCarPanel = new JPanel(new GridLayout(2, 2));
+        JTextField carIdField = new JTextField();
+        JTextField customerNameField = new JTextField();
         JButton sellButton = new JButton("Продать");
+        JButton backButton = createBackButton();
 
         sellCarPanel.add(new JLabel("Car ID:"));
         sellCarPanel.add(carIdField);
-        sellCarPanel.add(new JLabel("ФИО покупателя:"));
+        sellCarPanel.add(new JLabel("Имя покупателя:"));
         sellCarPanel.add(customerNameField);
         sellCarPanel.add(sellButton);
+        sellCarPanel.add(backButton);
 
         sellButton.addActionListener(e -> {
             try {
@@ -191,112 +303,22 @@ public class CarDealerGUI {
                 String customerName = customerNameField.getText();
                 Customer customer = new Customer(customerName, 0, "");
                 autoSalon.sellCar(carId, customer);
-                dialog.dispose();
+                JOptionPane.showMessageDialog(null, "Автомобиль успешно продан", "Успех", JOptionPane.INFORMATION_MESSAGE);
+                cardLayout.show(cards, "main");
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(null, "Введите корректные данные для Car ID", "Ошибка", JOptionPane.ERROR_MESSAGE);
             }
         });
 
-        dialog.setVisible(true);
+        backButton.addActionListener(e -> cardLayout.show(cards, "main"));
+
+        cards.add(sellCarPanel, "sellCar");
+        cardLayout.show(cards, "sellCar");
     }
 
-    private void openCustomerInfoDialog() {
-        JDialog dialog = new JDialog();
-        dialog.setTitle("Информация о покупателе");
-        dialog.setSize(400, 300);
-        dialog.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-
-        JPanel customerInfoPanel = new JPanel();
-        dialog.add(customerInfoPanel);
-
-        JTextField customerNameField = new JTextField(10);
-        JButton showInfoButton = new JButton("Показать информацию");
-
-        customerInfoPanel.add(new JLabel("ФИО покупателя:"));
-        customerInfoPanel.add(customerNameField);
-        customerInfoPanel.add(showInfoButton);
-
-        JTextArea outputArea = new JTextArea(30, 30);
-        customerInfoPanel.add(outputArea);
-
-        showInfoButton.addActionListener(e -> {
-            String customerName = customerNameField.getText();
-            String customerInfo = getCustomerInfo(customerName);
-            outputArea.setText(customerInfo);
-        });
-
-        dialog.setVisible(true);
+    private void closeApplication() {
+        autoSalon.closeConnection();
+        System.exit(0);
     }
 
-    private void showCars() {
-        JDialog dialog = new JDialog();
-        dialog.setTitle("Список автомобилей");
-        dialog.setSize(400, 300);
-        dialog.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-
-        JPanel carsPanel = new JPanel();
-        dialog.add(carsPanel);
-
-        JTextArea outputArea = new JTextArea(30, 30);
-        carsPanel.add(outputArea);
-
-        List<Car> cars = autoSalon.getAllCars();
-        outputArea.setText("Автомобили в салоне:\n");
-        for (Car car : cars) {
-            outputArea.append(car.getCarId() + " - " + car.getBrand() + " " + car.getModel() + " (" + car.getType() + ")\n");
-        }
-
-        dialog.setVisible(true);
-    }
-
-    private void showCustomers() {
-        JDialog dialog = new JDialog();
-        dialog.setTitle("Список покупателей");
-        dialog.setSize(400, 300);
-        dialog.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-
-        JPanel customersPanel = new JPanel();
-        dialog.add(customersPanel);
-
-        JTextArea outputArea = new JTextArea(30, 30);
-        customersPanel.add(outputArea);
-
-        List<Customer> customers = autoSalon.getAllCustomers();
-        outputArea.setText("Покупатели в системе:\n");
-        for (Customer customer : customers) {
-            outputArea.append(customer.getFullName() + " (Возраст: " + customer.getAge() + ", Пол: " + customer.getGender() + ")\n");
-        }
-
-        dialog.setVisible(true);
-    }
-
-
-    private String getCustomerInfo(String customerName) {
-        Customer customer = findCustomerByName(customerName);
-        if (customer != null) {
-            StringBuilder info = new StringBuilder("Информация о покупателе:\n");
-            info.append("ФИО: ").append(customer.getFullName()).append("\n");
-            info.append("Возраст: ").append(customer.getAge()).append(" ");
-            info.append("Пол: ").append(customer.getGender()).append("\n");
-            info.append("Купленные машины:\n");
-
-            List<Car> soldCars = autoSalon.getCustomerCars(customer.getFullName());
-            for (Car car : soldCars) {
-                info.append(car.getBrand()).append(" ").append(car.getModel()).append(" (Car ID: ").append(car.getCarId()).append(")\n");
-            }
-
-            return info.toString();
-        } else {
-            return "Покупатель не найден!";
-        }
-    }
-
-    private Customer findCustomerByName(String customerName) {
-        for (Customer customer : autoSalon.getAllCustomers()) {
-            if (customer.getFullName().equals(customerName)) {
-                return customer;
-            }
-        }
-        return null;
-    }
 }
