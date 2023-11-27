@@ -4,6 +4,14 @@ This Java application, "Car Dealer," is designed to manage information about car
 
 ## Table of Contents
 - [Overview](#overview)
+- [Classes](#classes)
+  - [Main](#main)
+  - [Customer](#customer)
+  - [Car](#car)
+  - [CarDealerGUI](#cardealergui)
+  - [SoldCar](#soldcar)
+  - [AutoSalon](#autosalon)
+  - [SQLiteDatabase](#sqlitedatabase)
 - [Features](#features)
 - [Usage](#usage)
 - [Database](#database)
@@ -13,11 +21,27 @@ This Java application, "Car Dealer," is designed to manage information about car
 
 The application consists of three main classes:
 
-1. **Main**: The entry point of the application that initializes the GUI.
+### Main
+The `Main` class serves as the entry point of the application, initializing the GUI by invoking the `CarDealerGUI` constructor.
 
-2. **Customer**: Represents information about a customer, including full name, age, and gender.
+### Customer
+The `Customer` class represents information about a customer, including full name, age, and gender. It includes methods to retrieve and modify customer details.
 
-...
+### Car
+The `Car` class represents information about a car, including a unique ID, brand, model, type, and associated customer name. It includes methods to retrieve and modify car details.
+
+### CarDealerGUI
+The `CarDealerGUI` class implements the graphical user interface using Swing. It provides various functionalities such as adding/editing cars and customers, displaying car and customer information, selling cars, and showing sold cars.
+
+### SoldCar
+The `SoldCar` class represents a sold car, including the car ID and the customer name. It includes methods to retrieve and modify information about sold cars.
+
+### AutoSalon
+The `AutoSalon` class manages interactions with the SQLite database. It provides methods to add/edit cars and customers, retrieve information about cars and customers, sell cars, and get information about sold cars.
+
+### SQLiteDatabase
+The `SQLiteDatabase` class manages the SQLite database connection and table creation. It includes methods for connecting, creating tables, and closing connections.
+
 
 ## Features
 
