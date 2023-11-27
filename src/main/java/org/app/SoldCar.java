@@ -27,9 +27,9 @@ public class SoldCar {
 
     @Override
     public String toString() {
-        return "SoldCar{" +
-                "carId=" + carId +
-                ", customerName='" + customerName + '\'' +
+        return "Проданный автомобиль{" +
+                "carId:" + carId +
+                ", Имя покупателя:'" + customerName + '\'' +
                 '}';
     }
 }
