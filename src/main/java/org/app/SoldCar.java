@@ -8,7 +8,6 @@ public class SoldCar {
         this.carId = carId;
         this.customerName = customerName;
     }
-
     public int getCarId() {
         return carId;
     }
@@ -27,9 +26,7 @@ public class SoldCar {
 
     @Override
     public String toString() {
-        return "Проданный автомобиль{" +
-                "carId:" + carId +
-                ", Имя покупателя:'" + customerName + '\'' +
-                '}';
+        return
+                "Id:" + carId;
     }
 }
