@@ -33,18 +33,19 @@ public class AutoSalon {
     }
 
     public void addCustomer(Customer customer) {
-        String sql = "INSERT INTO customers (full_name, age, gender) VALUES (?, ?, ?)";
+        String insertCustomerSql = "INSERT OR IGNORE INTO customers (full_name, age, gender) VALUES (?, ?, ?)";
 
-        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-            preparedStatement.setString(1, customer.getFullName());
-            preparedStatement.setInt(2, customer.getAge());
-            preparedStatement.setString(3, customer.getGender());
+        try (PreparedStatement insertCustomerStatement = connection.prepareStatement(insertCustomerSql)) {
+            insertCustomerStatement.setString(1, customer.getFullName());
+            insertCustomerStatement.setInt(2, customer.getAge());
+            insertCustomerStatement.setString(3, customer.getGender());
 
-            preparedStatement.executeUpdate();
+            insertCustomerStatement.executeUpdate();
         } catch (SQLException e) {
             handleSQLException(e);
         }
     }
+
 
 
     public List<Car> getAllCars() {
@@ -90,10 +91,13 @@ public class AutoSalon {
     public List<Car> getCustomerCars(String customerName) {
         List<Car> customerCars = new ArrayList<>();
         String selectCustomerCars = "SELECT c.* FROM cars c " +
-                "INNER JOIN sold_cars sc ON c.car_id = sc.car_id " +
-                "WHERE LOWER(sc.customer_name) = LOWER(?)";
+                "LEFT JOIN sold_cars sc ON c.car_id = sc.car_id " +
+                "WHERE LOWER(sc.customer_name) = LOWER(?) OR LOWER(c.customer_name) = LOWER(?)";
+
         try (PreparedStatement preparedStatement = connection.prepareStatement(selectCustomerCars)) {
             preparedStatement.setString(1, customerName.toLowerCase());
+            preparedStatement.setString(2, customerName.toLowerCase());
+
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 while (resultSet.next()) {
                     int carId = resultSet.getInt("car_id");
@@ -104,13 +108,11 @@ public class AutoSalon {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            handleSQLException(e);
         }
+
         return customerCars;
     }
-
-
-
 
     public List<SoldCar> getSoldCars() {
         List<SoldCar> soldCars = new ArrayList<>();
@@ -158,28 +160,27 @@ public class AutoSalon {
     }
 
     public void sellCar(int carId, Customer customer) {
-        String insertCarSql = "INSERT INTO sold_cars (car_id, customer_name) VALUES (?, ?)";
+        String insertSoldCarSql = "INSERT INTO sold_cars (car_id, customer_name) VALUES (?, ?)";
         String deleteCarSql = "DELETE FROM cars WHERE car_id=?";
+        String selectCustomerSql = "SELECT * FROM customers WHERE LOWER(full_name) = LOWER(?)";
 
         try {
             connection.setAutoCommit(false);
 
-            try (PreparedStatement insertCarStatement = connection.prepareStatement(insertCarSql);
-                 PreparedStatement deleteCarStatement = connection.prepareStatement(deleteCarSql)) {
+            try (PreparedStatement insertSoldCarStatement = connection.prepareStatement(insertSoldCarSql);
+                 PreparedStatement deleteCarStatement = connection.prepareStatement(deleteCarSql);
+                 PreparedStatement selectCustomerStatement = connection.prepareStatement(selectCustomerSql)) {
 
-                addCustomer(customer);
+                selectCustomerStatement.setString(1, customer.getFullName().toLowerCase());
 
-                insertCarStatement.setInt(1, carId);
-                insertCarStatement.setString(2, customer.getFullName());
-                insertCarStatement.executeUpdate();
-
-                // Set the customer_name in the cars table
-                String updateCarCustomerSql = "UPDATE cars SET customer_name=? WHERE car_id=?";
-                try (PreparedStatement updateCarCustomerStatement = connection.prepareStatement(updateCarCustomerSql)) {
-                    updateCarCustomerStatement.setString(1, customer.getFullName());
-                    updateCarCustomerStatement.setInt(2, carId);
-                    updateCarCustomerStatement.executeUpdate();
+                ResultSet resultSet = selectCustomerStatement.executeQuery();
+                if (!resultSet.next()) {
+                    addCustomer(customer);
                 }
+
+                insertSoldCarStatement.setInt(1, carId);
+                insertSoldCarStatement.setString(2, customer.getFullName());
+                insertSoldCarStatement.executeUpdate();
 
                 deleteCarStatement.setInt(1, carId);
                 deleteCarStatement.executeUpdate();
@@ -195,10 +196,6 @@ public class AutoSalon {
             handleSQLException(e);
         }
     }
-
-
-
-
 
     public void closeConnection() {
         try {

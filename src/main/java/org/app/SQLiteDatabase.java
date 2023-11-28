@@ -60,18 +60,4 @@ public class SQLiteDatabase {
         return connection;
     }
 
-    public void setConnection(Connection connection) {
-        this.connection = connection;
-    }
-
-    public void closeConnection() {
-        try {
-            if (connection != null && !connection.isClosed()) {
-                connection.close();
-                logger.info("Database connection closed.");
-            }
-        } catch (SQLException e) {
-            logger.error("Failed to close the database connection", e);
-        }
-    }
 }

@@ -250,6 +250,7 @@ public class CarDealerGUI {
     private void openCustomerInfoPanel() {
         JPanel customerInfoPanel = new JPanel(new BorderLayout());
         JTextField nameField = new JTextField();
+        nameField.setColumns(20);
         JButton showButton = new JButton("Показать информацию");
         JButton backButton = createBackButton();
 
@@ -266,13 +267,20 @@ public class CarDealerGUI {
         showButton.addActionListener(e -> {
             String name = nameField.getText();
             List<Car> customerCars = autoSalon.getCustomerCars(name);
+            List<SoldCar> soldCars = autoSalon.getSoldCars();
             StringBuilder customerInfoText = new StringBuilder();
             customerInfoText.append("Автомобили покупателя ").append(name).append(":\n");
             for (Car car : customerCars) {
                 customerInfoText.append(car).append("\n");
             }
+            for (SoldCar soldCar : soldCars) {
+                if (soldCar.getCustomerName().equalsIgnoreCase(name)) {
+                    customerInfoText.append("Проданный автомобиль: ").append(soldCar).append("\n");
+                }
+            }
             customerInfoTextArea.setText(customerInfoText.toString());
         });
+
 
         backButton.addActionListener(e -> cardLayout.show(cards, "main"));
 
@@ -282,6 +290,7 @@ public class CarDealerGUI {
         cards.add(customerInfoPanel, "customerInfo");
         cardLayout.show(cards, "customerInfo");
     }
+
 
     private void openSellCarPanel() {
         JPanel sellCarPanel = new JPanel(new GridLayout(2, 2));
@@ -309,7 +318,6 @@ public class CarDealerGUI {
                 JOptionPane.showMessageDialog(null, "Введите корректные данные для Car ID", "Ошибка", JOptionPane.ERROR_MESSAGE);
             }
         });
-
         backButton.addActionListener(e -> cardLayout.show(cards, "main"));
 
         cards.add(sellCarPanel, "sellCar");
